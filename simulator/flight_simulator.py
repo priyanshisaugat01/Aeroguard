@@ -1,6 +1,12 @@
 import random
 import time
+import json
+import boto3
 from datetime import datetime
+
+# AWS S3 Setup
+s3_client = boto3.client('s3', region_name='us-east-1')
+BUCKET_NAME = 'aeroguard-flight-data-2026'
 
 def generate_flight_metrics():
     """Generate fake airline server metrics"""
@@ -26,6 +32,18 @@ def generate_flight_metrics():
     
     return metrics
 
+def save_to_s3(metrics):
+    """Save metrics to AWS S3"""
+    filename = f"flight-data/{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.json"
+    
+    s3_client.put_object(
+        Bucket=BUCKET_NAME,
+        Key=filename,
+        Body=json.dumps(metrics),
+        ContentType='application/json'
+    )
+    print(f"☁️  Saved to S3: {filename}")
+
 def display_metrics(metrics):
     """Display metrics in nice format"""
     print("\n" + "="*50)
@@ -45,9 +63,11 @@ def display_metrics(metrics):
 # Main program
 print("🛡️ AeroGuard Starting...")
 print("✈️ Monitoring Flight Operations...")
+print("☁️ Saving data to AWS S3...")
 print("Press Ctrl+C to stop\n")
 
 while True:
     metrics = generate_flight_metrics()
     display_metrics(metrics)
-    time.sleep(3)
+    save_to_s3(metrics)
+    time.sleep(10)
